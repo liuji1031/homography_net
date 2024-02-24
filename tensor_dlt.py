@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
+import cv2
 
-def TensorDLT(h4pt : tf.Tensor, crop_size=128):
+def TensorDLT(h4pt : tf.Tensor, crop_size=128, debug=False):
     """recover homography H from the 4 point representation and maintain
     differentiability
     """
@@ -20,6 +21,10 @@ def TensorDLT(h4pt : tf.Tensor, crop_size=128):
     duv = tf.reshape(h4pt, (4,2))
     uv = uv_prime - duv # 4 corners mapped from 4 points of the rectangular 
                         # image patch by applying H
+    
+    # flip both uv and uv_prime, such that each row is xy instead of row, col
+    uv = tf.reverse(uv, axis=[1])
+    uv_prime = tf.reverse(uv_prime, axis=[1])
     
     # in other words, uv_prime = H * uv
 
@@ -50,9 +55,21 @@ def TensorDLT(h4pt : tf.Tensor, crop_size=128):
         if b is None:
             b = -1.0*tmp3 # b equals [-vprime, uprime]^T
         else:
-            b = tf.concat((b, tmp3))
+            b = tf.concat((b, -1.0*tmp3),axis=0)
 
-        # solve for H using pseudo inv
-        H = tf.matmul(tf.linalg.pinv(A), b)
-        
-        return H
+    # solve for H using pseudo inv
+    H = tf.matmul(tf.linalg.pinv(A), b)
+    H = tf.reshape(tf.concat((H,tf.ones((1,1))),axis=0),(3,3))
+
+    if debug:
+        H_ = cv2.getPerspectiveTransform(uv.numpy(),
+                                            uv_prime.numpy())
+        print("expected:\n",H_)
+        print("calculated:\n",H)
+        for i in range(4):
+            tmp = H.numpy().dot(np.array([uv.numpy()[i,0],
+                                    uv.numpy()[i,1],
+                                    1.0])[:,np.newaxis])
+            print(uv_prime[i,:].numpy(),np.round(tmp[:2].flatten()/tmp[2]))
+    
+    return H
