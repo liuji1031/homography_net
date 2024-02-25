@@ -89,7 +89,8 @@ class DataGenerator:
             plt.imshow(np.hstack((p1/255, p2/255)))
 
         if self.mode == "unsupervised":
-            input,output = p1,p2
+            input = (p1,p2)
+            output = p2
         elif self.mode == "supervised":
             input = (p1,p2)
             output = tf.convert_to_tensor(H4pt,dtype=tf.float32)

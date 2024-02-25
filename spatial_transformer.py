@@ -15,6 +15,8 @@ import numpy as np
 
 def spatial_transformer_network(input_fmap,
                                 homography,
+                                img_width=128,
+                                img_height=128,
                                 out_dims=None,
                                 **kwargs):
     """
@@ -53,8 +55,8 @@ def spatial_transformer_network(input_fmap,
     """
     # grab input dimensions
     B = tf.shape(input_fmap)[0]
-    H = tf.shape(input_fmap)[1]
-    W = tf.shape(input_fmap)[2]
+    H = img_height
+    W = img_width
 
     # reshape homography to (B, 2, 3)
     homography = tf.reshape(homography, [B, 3, 3])
@@ -128,9 +130,11 @@ def grid_generator_v2(height, width, homography):
     sampling_grid = tf.cast(sampling_grid, 'float32')
 
     # transform the sampling grid - batch multiply
-    M = tf.convert_to_tensor(np.array([[float(width)/2.,0.,float(width)/2.],
-                                       [0.,float(height)/2.,float(height)/2.],
-                                       [0.,0.,1.0]]),dtype=tf.float32)
+    w = float(width)
+    h = float(height)
+    M = tf.constant([[w/2.,0.,w/2.],
+                     [0.,h/2,h/2.],
+                     [0.,0.,1.]],dtype=tf.float32)
     Minv = tf.linalg.inv(M)
 
     def expand_mat(mat):

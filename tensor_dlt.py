@@ -2,7 +2,20 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-def TensorDLT(h4pt : tf.Tensor, crop_size=128, debug=False):
+def TensorDLT(h4pt_batch):
+    """go through each batch of the 4 point representation and returns
+    the homography
+
+    Args:
+        h4pt_batch (_type_): _description_
+    """
+
+    return tf.map_fn(fn = compute_DLT,
+                     elems = h4pt_batch,
+                     dtype=tf.float32)
+
+
+def compute_DLT(h4pt : tf.Tensor, crop_size=128, debug=False):
     """recover homography H from the 4 point representation and maintain
     differentiability
     """
@@ -63,7 +76,7 @@ def TensorDLT(h4pt : tf.Tensor, crop_size=128, debug=False):
 
     if debug:
         H_ = cv2.getPerspectiveTransform(uv.numpy(),
-                                            uv_prime.numpy())
+                                         uv_prime.numpy())
         print("expected:\n",H_)
         print("calculated:\n",H)
         for i in range(4):
