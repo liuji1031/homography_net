@@ -4,7 +4,7 @@ from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.layers import BatchNormalization as BN
 
 
-def model_v1():
+def model_v1(verbose=False):
 
     base = VGG19(
         include_top=False,
@@ -90,6 +90,8 @@ def model_v1():
     output = keras.layers.Dense(units=8,activation=None)(x)
 
     model = keras.Model(inputs=[input1,input2],outputs=output)
-    model.summary()
+
+    if verbose:
+        model.summary()
 
     return model

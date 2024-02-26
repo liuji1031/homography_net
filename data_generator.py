@@ -66,8 +66,9 @@ class DataGenerator:
             print(H4pt)
 
         # get actual homography
-        H = cv2.getPerspectiveTransform(np.fliplr(corner_pts_new.astype(np.float32)),
-                                    np.fliplr(corner_pts.astype(np.float32)))
+        H = cv2.getPerspectiveTransform(
+            src=np.fliplr(corner_pts_new.astype(np.float32)),
+            dst=np.fliplr(corner_pts.astype(np.float32)))
         
         im_warp = cv2.warpPerspective(im_data, H, (w,h))
 
@@ -89,7 +90,8 @@ class DataGenerator:
             plt.imshow(np.hstack((p1/255, p2/255)))
 
         if self.mode == "unsupervised":
-            input,output = p1,p2
+            input = (p1,p2)
+            output = p2
         elif self.mode == "supervised":
             input = (p1,p2)
             output = tf.convert_to_tensor(H4pt,dtype=tf.float32)
