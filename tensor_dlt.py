@@ -2,9 +2,22 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-def TensorDLT(h4pt_batch : tf.Tensor,batch_size=8, crop_size=128, debug=False):
+def TensorDLT(h4pt_batch : tf.Tensor,
+              upper_left_corner : tf.Tensor,
+              batch_size=8,
+              crop_size=128,
+              debug=False):
     """recover homography H from the 4 point representation and maintain
     differentiability
+
+    Args:
+        h4pt_batch (tf.Tensor): batch of 4 points representation of 
+        batch_size (int, optional): _description_. Defaults to 8.
+        crop_size (int, optional): _description_. Defaults to 128.
+        debug (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
     """
 
     # construct the A matrix
@@ -23,12 +36,21 @@ def TensorDLT(h4pt_batch : tf.Tensor,batch_size=8, crop_size=128, debug=False):
         m = tf.repeat(m, repeats=batch_size, axis=0)
         return m
 
+    # add the original upper left corner coordinate back
     uv_prime = expand_dim(uv_prime)
-    
+
+    tmp = tf.reshape(upper_left_corner,(-1,2,1))
+    tmp = -1.0*tf.reverse(tmp, axis=[-2])
+    M = tf.concat((tf.eye(2, batch_shape=[batch_size]),
+                  tmp),axis=-1)
+
+    M = tf.concat((M, expand_dim(tf.constant([[0.,0.,1.]],dtype=tf.float32))),
+                   axis=-2)
+
     duv = tf.reshape(h4pt_batch, (-1,4,2))
     uv = uv_prime - duv # 4 corners mapped from 4 points of the rectangular 
                         # image patch by applying H
-    
+
     # flip both uv and uv_prime, such that each row is xy instead of row, col
     uv = tf.reverse(uv, axis=[-1])
     uv_prime = tf.reverse(uv_prime, axis=[-1])
@@ -73,16 +95,25 @@ def TensorDLT(h4pt_batch : tf.Tensor,batch_size=8, crop_size=128, debug=False):
     H = tf.matmul(tf.linalg.pinv(A), b) # batch size by 8 by 1
     H = tf.reshape(tf.concat((H,tf.ones((batch_size,1,1))),axis=-2),(-1,3,3))
 
+    H = tf.matmul(tf.linalg.inv(M),H)
+    H = tf.matmul(H, M)
+
+    # normalize by the last entry
+    H = H / H[:,2,2][:,tf.newaxis,tf.newaxis]
+
     if debug:
         for b in range(batch_size):
             uv_ = tf.squeeze(uv[b,:,:]).numpy()
             uv_p_ = tf.squeeze(uv_prime[b,:,:]).numpy()
+            uv_ += np.flip(upper_left_corner.numpy()[[b],:])
+            uv_p_ += np.flip(upper_left_corner.numpy()[[b],:])
+
             H_ = cv2.getPerspectiveTransform(uv_,
                                              uv_p_)
-            print("expected:\n",H_)
+            print("==== expected:\n",H_)
 
             Hc = tf.squeeze(H[b,:,:]).numpy()
-            print("calculated:\n",H[b,:].numpy())
+            print("==== calculated:\n",H[b,:].numpy())
 
             d = np.linalg.norm(H_-Hc) / np.linalg.norm(H_)
             print(f"relative diff: {d:.2e}")
