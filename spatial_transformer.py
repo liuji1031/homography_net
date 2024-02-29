@@ -233,6 +233,6 @@ def bilinear_sampler(img, x, y):
 
     out = tf.where(tf.math.is_nan(out), 0., out)
     print("checking nan")
-    tf.debugging.check_numerics(out,message='')
+    tf.debugging.check_numerics(out,message='nan encountered in stn')
 
     return out
