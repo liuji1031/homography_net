@@ -9,9 +9,11 @@ code only deals with affine transformation.
 
 """
 
+import sys
 import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
+from loguru import logger
 
 def spatial_transformer_network(input_fmap,
                                 homography,
@@ -145,13 +147,6 @@ def grid_generator_v2(height, width, homography):
     M = expand_mat(M)
     Minv = expand_mat(Minv)
 
-    try:
-        tf.print(homography)
-        hinv = tf.linalg.inv(homography)
-    except:
-        print(homography)
-        ValueError()
-
     Hinv = tf.linalg.matmul(Minv, tf.linalg.inv(homography))
     Hinv = tf.linalg.matmul(Hinv, M)
 
@@ -235,5 +230,9 @@ def bilinear_sampler(img, x, y):
 
     # compute output
     out = tf.add_n([wa*Ia, wb*Ib, wc*Ic, wd*Id])
+
+    out = tf.where(tf.math.is_nan(out), 0., out)
+    print("checking nan")
+    tf.debugging.check_numerics(out,message='')
 
     return out
