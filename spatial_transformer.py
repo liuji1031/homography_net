@@ -135,7 +135,7 @@ def grid_generator_v2(height, width, homography):
     M = tf.constant([[w/2.,0.,w/2.],
                      [0.,h/2,h/2.],
                      [0.,0.,1.]],dtype=tf.float32)
-    Minv = tf.linalg.inv(M)
+    Minv = tf.linalg.pinv(M,name='inv3')
 
     def expand_mat(mat):
         mat = tf.expand_dims(mat,axis=0)
@@ -144,6 +144,13 @@ def grid_generator_v2(height, width, homography):
     
     M = expand_mat(M)
     Minv = expand_mat(Minv)
+
+    try:
+        tf.print(homography)
+        hinv = tf.linalg.inv(homography)
+    except:
+        print(homography)
+        ValueError()
 
     Hinv = tf.linalg.matmul(Minv, tf.linalg.inv(homography))
     Hinv = tf.linalg.matmul(Hinv, M)

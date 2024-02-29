@@ -92,10 +92,10 @@ def TensorDLT(h4pt_batch : tf.Tensor,
             b = tf.concat((b, -1.0*tmp3),axis=-2)
 
     # solve for H using pseudo inv
-    H = tf.matmul(tf.linalg.pinv(A), b) # batch size by 8 by 1
+    H = tf.matmul(tf.linalg.pinv(A,name='inv1',rcond=1e-5), b) # batch size by 8 by 1
     H = tf.reshape(tf.concat((H,tf.ones((batch_size,1,1))),axis=-2),(-1,3,3))
 
-    H = tf.matmul(tf.linalg.inv(M),H)
+    H = tf.matmul(tf.linalg.inv(M,name='inv2'),H)
     H = tf.matmul(H, M)
 
     # normalize by the last entry

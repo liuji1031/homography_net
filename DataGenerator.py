@@ -21,11 +21,27 @@ class DataGenerator:
         self.nimg = len(self.im_list)
         self.ifile=0
 
+    def pass_colinear(self, pts):
+        a,b,c = pts[0],pts[1],pts[2]
+        d = np.flip(c-a)
+        d = d / np.linalg.norm(d)
+        d[1] = -d[1]
+        proj_bd = np.inner(b,d)
+        proj_ad = np.inner(a,d)
+        proj_cd = np.inner(c,d)
+
+        if proj_bd > proj_ad+5 and proj_bd > proj_cd+5:
+            return True
+        else:
+            print(pts)
+            print(proj_bd, proj_ad, proj_cd)
+            return False
+
     def gen_img_and_homography(self,img_path,debug=False):
     
         # read image
         im = Image.open(img_path)
-        im = im.resize(self.resize_shape) # resize
+        # im = im.resize(self.resize_shape) # resize
         im_ori = np.array(im)
 
         if debug:
@@ -52,21 +68,33 @@ class DataGenerator:
         upper_left_w = np.random.randint(low=self.rho,high=w-self.rho-cw)
         
         # Coordinates of Patch A
-        C_A_4pts = np.array([[upper_left_h, upper_left_w],          # upper left
-                             [upper_left_h+ch-1, upper_left_w],     # bottom left
-                             [upper_left_h+ch-1, upper_left_w+cw-1],# bottom right
-                             [upper_left_h, upper_left_w+cw-1]])    # upper right
+        # C_A_4pts = np.array([[upper_left_h, upper_left_w],          # upper left
+        #                      [upper_left_h+ch-1, upper_left_w],     # bottom left
+        #                      [upper_left_h+ch-1, upper_left_w+cw-1],# bottom right
+        #                      [upper_left_h, upper_left_w+cw-1]])    # upper right
         upper_left_coord = tf.convert_to_tensor(
             np.array([upper_left_h,upper_left_w]))
 
         corner_pts = np.array([[0,0],[ch-1,0],[ch-1,cw-1],[0,cw-1]]) + \
                     np.array([upper_left_h, upper_left_w])[np.newaxis,:]
-        corner_pts_new = np.copy(corner_pts)
+        
         # generate the new 4 corner points
-        for i in range(4):
-            corner_pts_new[i,:] += np.random.randint(-self.rho,
-                                                     self.rho+1,
-                                                     size=(2,))
+        regen = True
+        while regen:
+            corner_pts_new = np.copy(corner_pts)
+            corner_pts_new += np.random.randint(-self.rho,
+                                                    self.rho+1,
+                                                    size=(4,2))
+            ind = np.array([0,1,2,3])
+            for k in range(4):
+                pts = np.copy(corner_pts_new)
+                pts = pts[(ind+k)%4,:]
+                pts = pts[1:,:]-pts[[0],:]
+                if not self.pass_colinear(pts):
+                    print('colinearity detected!')
+                    break
+            regen=False
+
         # note H map from corners new back to original corners
 
         # calculate the difference in xy coordinate
@@ -90,8 +118,8 @@ class DataGenerator:
         # convert to tensor
         p1 = tf.convert_to_tensor(p1, dtype=tf.float32)
         p2 = tf.convert_to_tensor(p2, dtype=tf.float32)
-        im_ori = tf.convert_to_tensor(im_ori, dtype=tf.float32)
-        im_warp = tf.convert_to_tensor(im_warp, dtype=tf.float32)
+        im_ori = tf.convert_to_tensor(im_ori/255., dtype=tf.float32)
+        im_warp = tf.convert_to_tensor(im_warp/255., dtype=tf.float32)
 
         if debug:
             print(H)
@@ -107,6 +135,11 @@ class DataGenerator:
         if self.mode == "unsupervised_test":
             input = (p1,p2,im_ori,upper_left_coord,h4pt)
             output = im_warp
+        elif self.mode == "unsupervised_with_h4pt":
+            # under this mode, output the 4 point representation
+            # as well, so we can calculate metric 
+            input = (p1,p2,im_ori,upper_left_coord)
+            output = (im_warp, h4pt)
         elif self.mode == "unsupervised":
             input = (p1,p2,im_ori,upper_left_coord)
             output = im_warp
