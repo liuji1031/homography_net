@@ -141,28 +141,34 @@ def inception_module(x,
     
     conv_1x1 = Conv2D(filters_1x1, (1, 1),
                       padding='same',
-                      activation='relu')(x)
+                      activation='relu',
+                      )(x)
     
     conv_3x3 = Conv2D(filters_3x3_reduce,(1, 1),
                       padding='same',
-                      activation='relu',)(x)
+                      activation='relu',
+                      )(x)
     
     conv_3x3 = Conv2D(filters_3x3,(3, 3),
                       padding='same',
-                      activation='relu')(conv_3x3)
+                      activation='relu',
+                      )(conv_3x3)
 
     conv_5x5 = Conv2D(filters_5x5_reduce, (1, 1),
                       padding='same',
-                      activation='relu',)(x)
+                      activation='relu',
+                      )(x)
     
     conv_5x5 = Conv2D(filters_5x5, (5, 5),
                       padding='same',
-                      activation='relu')(conv_5x5)
+                      activation='relu',
+                      )(conv_5x5)
 
     pool_proj = MaxPool2D((3, 3), strides=(1, 1), padding='same')(x)
     pool_proj = Conv2D(filters_pool_proj, (1, 1),
                        padding='same',
-                       activation='relu')(pool_proj)
+                       activation='relu',
+                      )(pool_proj)
 
     output = concatenate([conv_1x1, conv_3x3, conv_5x5, pool_proj],
                          axis=3, name=name)
@@ -222,13 +228,18 @@ def model_v2(verbose=False):
     x = keras.layers.Flatten()(x)
     x = BN()(x)
 
-    x = keras.layers.Dense(units=512, activation='relu')(x)
+    x = keras.layers.Dense(units=512, activation='relu',
+                           kernel_initializer=keras.initializers.random_normal(stddev=0.01)
+                           )(x)
+    x = BN()(x)
+    print("new init")
+    x = keras.layers.Dense(units=512, activation='relu',
+                           kernel_initializer=keras.initializers.random_normal(stddev=0.01)
+                           )(x)
     x = BN()(x)
 
-    x = keras.layers.Dense(units=512, activation='relu')(x)
-    x = BN()(x)
-
-    output = keras.layers.Dense(units=8,activation=None)(x)
+    output = keras.layers.Dense(units=8,activation=None,
+                                kernel_initializer=keras.initializers.random_normal(stddev=0.01))(x)
 
     model = keras.Model(inputs=[input1,input2],outputs=output)
 

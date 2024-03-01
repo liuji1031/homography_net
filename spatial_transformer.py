@@ -180,6 +180,7 @@ def bilinear_sampler(img, x, y):
     -------
     - out: interpolated images according to grids. Same size as grid.
     """
+    B = tf.shape(img)[0]
     H = tf.shape(img)[1]
     W = tf.shape(img)[2]
     max_y = tf.cast(H - 1, 'int32')
@@ -229,10 +230,11 @@ def bilinear_sampler(img, x, y):
     wd = tf.expand_dims(wd, axis=3)
 
     # compute output
-    out = tf.add_n([wa*Ia, wb*Ib, wc*Ic, wd*Id])
+    out = tf.zeros_like(img,dtype=tf.float32)
+    out = out + tf.add_n([wa*Ia, wb*Ib, wc*Ic, wd*Id])
 
     out = tf.where(tf.math.is_nan(out), 0., out)
-    print("checking nan")
+    tf.print("checking nan")
     tf.debugging.check_numerics(out,message='nan encountered in stn')
 
     return out
