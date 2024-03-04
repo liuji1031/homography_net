@@ -72,6 +72,3 @@ The quantitative results are summarized below. The error refers to the L2 distan
 | :---        |    :----:       |     :----:       |    :----:       |
 | Supervised  | 5.15 $\pm$ 2.45 | 5.17 $\pm$ 2.44  | 5.23 $\pm$ 2.62 |
 | Unsupervised| 10.20 $\pm$ 4.74| 9.99 $\pm$ 4.92  | 10.21 $\pm$ 4.85|
-
-## Model checkpoint
-The checkpoints of the supervised and unsupervised model can be found [here](https://www.dropbox.com/scl/fo/tywx25upu76x4hbgzfqbu/h?rlkey=wc5gjy48dd7vu272c2bmoc87f&dl=0)
