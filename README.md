@@ -64,7 +64,7 @@ The parameter $\rho$ controls the amount of random shift in the corner coordinat
 
 The example performances from the supervised and unsupervised training are shown below. The original crop regions are shown in the left column. The middle columns shows the output of the ***supervised*** model. The right column shows the output of the ***unsupervised*** model. In general, the supervised model seems to outperform the unsupervised model. 
 
-![](./figures/visualization.png)
+![](./figures/visualization_.png)
 
 The quantitative results are summarized below. The error refers to the L2 distance between ground truth corner and predicted corner. 
 
