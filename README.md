@@ -1,6 +1,6 @@
 # Homography Net
 
-![](./figures/illustration_1.png)
+![](./figures/visualization_1.png)
 
 In this project, we aim to implement a deep learning framework to learn the underlying homography between two images. The approach takes inspiration from the following references:
 
