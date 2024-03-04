@@ -1,5 +1,7 @@
 # Homography Net
 
+![](./figures/illustration_1.png)
+
 In this project, we aim to implement a deep learning framework to learn the underlying homography between two images. The approach takes inspiration from the following references:
 
 [1]DeTone, D., Malisiewicz, T., & Rabinovich, A. (2016). Deep image homography estimation. arXiv preprint arXiv:1606.03798.
